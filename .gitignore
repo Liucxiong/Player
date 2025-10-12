@@ -1,0 +1,12 @@
+# Qt build folder
+/build/
+
+# 所有 DLL 文件
+*.dll
+
+# 其它不需要上传的文件（可选）
+*.exe
+*.obj
+*.log
+*.pdb
+*.pro.user
