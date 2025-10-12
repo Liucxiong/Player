@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/play.svg</file>
+        <file>icons/settings.svg</file>
+        <file>icons/next.svg</file>
+        <file>icons/last.svg</file>
+        <file>icons/pause.svg</file>
+        <file>icons/fullscreen.svg</file>
+        <file>icons/winIcon.svg</file>
+        <file>icons/winIcon.ico</file>
+    </qresource>
+</RCC>
