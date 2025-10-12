@@ -52,12 +52,12 @@ PathSel::PathSel(QTableWidget* tableWidget, QLabel* pathLabel, QToolButton* butt
         onRowDoubleClicked(row,0);
     });
 
-    path = "D:/python_code/pa_chong/OutVideo";
-    this->manager->clear();
-    qDebug() << "Now Path: "<< path;
-    setLabelContent();
-    QStringList list =  getVideoList();
-    this->manager->addByFilePathList(list);
+    // path = "D:/python_code/pa_chong/OutVideo";
+    // this->manager->clear();
+    // qDebug() << "Now Path: "<< path;
+    // setLabelContent();
+    // QStringList list =  getVideoList();
+    // this->manager->addByFilePathList(list);
 }
 /**
  * @brief 槽函数，文件选择关键函数
