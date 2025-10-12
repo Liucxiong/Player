@@ -12,5 +12,5 @@
 
 ---
 ## v1.0 界面展示
-<img src="Readme_Info/main-page.png" width="300" />
-<img src="Readme_Info/p1.png" width="300" />
+![主界面](Readme_Info/main-page.png)
+![功能截图](Readme_Info/p1.png)
