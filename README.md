@@ -1,4 +1,4 @@
-# 一个 Windows平台 基于QT 6.67 和 FFmpeg 8.0 的 C++ 视频播放器
+# 一个 Windows平台 基于QT 6.7.0 和 FFmpeg 8.0 的 C++ 视频播放器
 
 ## 功能实现
 
