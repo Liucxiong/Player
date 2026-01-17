@@ -19,6 +19,12 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
+  <property name="maximumSize">
+   <size>
+    <width>1000</width>
+    <height>600</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>VideoPlayer</string>
   </property>
@@ -123,7 +129,7 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>文件信息</string>
+            <string/>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -154,7 +160,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>展示区</string>
+          <string/>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -244,6 +250,9 @@
                  <height>0</height>
                 </size>
                </property>
+               <property name="toolTip">
+                <string>上一集</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -269,6 +278,9 @@
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>播放</string>
                </property>
                <property name="styleSheet">
                 <string notr="true"/>
@@ -300,6 +312,9 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="toolTip">
+                <string>下一集</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -319,12 +334,15 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_5">
+              <widget class="QPushButton" name="pushButton_4">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>全屏</string>
                </property>
                <property name="text">
                 <string/>
@@ -342,6 +360,103 @@
                <property name="checkable">
                 <bool>true</bool>
                </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBox">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="toolTip">
+                <string>倍速</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QComboBox {
+    border: 1px solid #888888;
+    border-radius: 5px;
+    padding-left: 5px;
+    padding-right: 20px; /* 给下拉箭头留空间 */
+    background-color: #f0f0f0;
+    font: 10pt &quot;Segoe UI&quot;;
+    color: #222222;
+}
+
+QComboBox:hover {
+    border: 1px solid #3399FF;
+    background-color: #e0f0ff;
+}
+
+QComboBox::drop-down {
+    width: 20px;
+    border-left: 1px solid #888888;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #ffffff;
+    selection-background-color: #3399FF;
+    selection-color: #ffffff;
+    padding: 5px;
+}
+</string>
+               </property>
+               <property name="editable">
+                <bool>false</bool>
+               </property>
+               <property name="currentText">
+                <string/>
+               </property>
+               <property name="currentIndex">
+                <number>-1</number>
+               </property>
+               <property name="sizeAdjustPolicy">
+                <enum>QComboBox::AdjustToContents</enum>
+               </property>
+               <property name="placeholderText">
+                <string>倍速</string>
+               </property>
+               <property name="duplicatesEnabled">
+                <bool>false</bool>
+               </property>
+               <item>
+                <property name="text">
+                 <string>0.25x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>0.5x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>0.75x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>1.0x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>1.25x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>1.5x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>2.0x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>3.0x</string>
+                </property>
+               </item>
               </widget>
              </item>
              <item>
