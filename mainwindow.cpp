@@ -27,14 +27,14 @@ MainWindow::MainWindow(QWidget *parent)
         m_fullScreen->showProgress(false);
         m_currentTarget = m_videoLabel;
         m_isFullScreen = false;
-        ui->pushButton_5->setChecked(false);
+        ui->pushButton_4->setChecked(false);
 
         updateVideoRenderSize();
         safeUpdatePixmap();
     });
     m_currentTarget = m_videoLabel;
     // 全屏按钮点击
-    connect(ui->pushButton_5, &QPushButton::clicked, this, &MainWindow::toggleFullScreen);
+    connect(ui->pushButton_4, &QPushButton::clicked, this, &MainWindow::toggleFullScreen);
 
 
     //双向绑定播放按钮到Player
@@ -55,6 +55,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(player, &VideoPlayer::frameReady, this, &MainWindow::onFrameReady);
     // 播放/暂停按钮
     connect(ui->pushButton_2, &QPushButton::clicked, this, &MainWindow::onPlayPauseClicked);
+    // 绑定速率切换
+    connect(ui->comboBox,&QComboBox::currentIndexChanged,this, &MainWindow::currentIndexSpeedChanged);
 
     // 初始化滚动条相关
     SlideFuncInit();
@@ -185,13 +187,13 @@ void MainWindow::toggleFullScreen()
         m_fullScreen->showProgress(true);
         m_currentTarget = m_fullScreen->label();
         m_isFullScreen = true;
-        ui->pushButton_5->setChecked(true);
+        ui->pushButton_4->setChecked(true);
     } else {
         m_fullScreen->hide();
         m_fullScreen->showProgress(false);
         m_currentTarget = m_videoLabel;
         m_isFullScreen = false;
-        ui->pushButton_5->setChecked(false);
+        ui->pushButton_4->setChecked(false);
     }
     // 更新 VideoPlayer 输出尺寸
     updateVideoRenderSize();
@@ -275,18 +277,34 @@ void MainWindow::KeysInit(){
     // 全屏：回车
     auto *fullShortcut = new QShortcut(QKeySequence(Qt::Key_Return), this);
     fullShortcut->setContext(Qt::ApplicationShortcut);
-    connect(fullShortcut, &QShortcut::activated, ui->pushButton_5, &QPushButton::click);
+    connect(fullShortcut, &QShortcut::activated, ui->pushButton_4, &QPushButton::click);
 
     // 快进 10 秒：右
     auto *forwardShortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
     forwardShortcut->setContext(Qt::ApplicationShortcut);
-    connect(forwardShortcut, &QShortcut::activated, this ,[this]() {
-        player->forward(10.0);
+    forwardShortcut->setAutoRepeat(false); // 禁用自动重复
+    connect(forwardShortcut, &QShortcut::activated, this, [this]() {
+        player->forward(5.0);
     });
     // 后退 5 秒：左
     auto *backwardShortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
     backwardShortcut->setContext(Qt::ApplicationShortcut);
-    connect(backwardShortcut, &QShortcut::activated, this ,[this]() {
+    backwardShortcut->setAutoRepeat(false); // 禁用自动重复
+    connect(backwardShortcut, &QShortcut::activated, this, [this]() {
         player->forward(-5.0);
     });
 }
+
+void MainWindow::currentIndexSpeedChanged(int index)
+{
+    qDebug() << "Change Index to " << index;
+    if(index < 0 || index >= manager->speedList.size()) return;
+    if(std::abs(manager->playSpeed - manager->speedList[index]) < 0.01) return;
+
+    manager->playSpeed = manager->speedList[index];
+
+    // 方案1: 不暂停，直接切换（推荐）
+    player->setPlayRate(manager->playSpeed);
+    qDebug() << "Change Rate to " << manager->playSpeed;
+}
+

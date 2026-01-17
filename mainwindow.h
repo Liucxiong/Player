@@ -32,6 +32,8 @@ private slots:
     void onPlayPauseClicked();
     void toggleFullScreen();
 
+    void currentIndexSpeedChanged(int index);
+
 private:
     Ui::MainWindow *ui;
     PathSel* pathSel;
