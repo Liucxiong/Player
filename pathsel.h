@@ -20,7 +20,7 @@ private:
     QString path;       //选择的文件夹路径
     QPushButton* Next;  //下一集
     QPushButton* Last;  //上一级
-
+    QString m_lastSelectedPath;  // 保存上次选择的路径
 
     VideoManager* manager;
 

@@ -52,24 +52,53 @@ PathSel::PathSel(QTableWidget* tableWidget, QLabel* pathLabel, QToolButton* butt
         onRowDoubleClicked(row,0);
     });
 
-    // path = "D:/python_code/pa_chong/OutVideo";
-    // this->manager->clear();
-    // qDebug() << "Now Path: "<< path;
-    // setLabelContent();
-    // QStringList list =  getVideoList();
-    // this->manager->addByFilePathList(list);
+    path = "D:/python_code/pa_chong";
+    this->manager->clear();
+    qDebug() << "Now Path: "<< path;
+    setLabelContent();
+    QStringList list =  getVideoList();
+    this->manager->addByFilePathList(list);
 }
 /**
  * @brief 槽函数，文件选择关键函数
  */
-void PathSel::chooseDirectory(){
-    path = QFileDialog::getExistingDirectory(nullptr,"选择文件夹",QDir::homePath());
-    if(!path.isEmpty()){
-        manager->clear();   //触发清空
-        qDebug() << "Now Path: "<< path;
-        setLabelContent();
-        QStringList list =  getVideoList();
-        manager->addByFilePathList(list);
+void PathSel::chooseDirectory()
+{
+    // 1. 使用上次选择的路径作为初始目录（记住上次目录）
+    QString initialDir = m_lastSelectedPath.isEmpty()
+                             ? QDir::homePath()
+                             : m_lastSelectedPath;
+
+    // 2. 创建文件对话框（仅选文件，不选文件夹）
+    QFileDialog dialog(nullptr, "选择视频文件", initialDir);
+    // 3. 关键配置（仅允许选视频文件，不允许选文件夹）
+    dialog.setFileMode(QFileDialog::ExistingFile);  // 仅允许选择单个现有文件（不允许文件夹）
+    dialog.setNameFilter("视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)");  // 只显示视频文件
+    dialog.setViewMode(QFileDialog::Detail);  // 详细视图（方便查看文件信息）
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);  // 使用Qt统一对话框（避免原生对话框限制）
+    // 4. 显示对话框（用户只能选择视频文件，无法选文件夹）
+    if (dialog.exec() != QDialog::Accepted) {
+        return;  // 用户取消选择
+    }
+    // 5. 获取选中的视频文件路径（安全方式，避免临时对象问题）
+    QStringList selectedFiles = dialog.selectedFiles();
+    if (selectedFiles.isEmpty()) {
+        return;  // 安全检查（理论上不会为空，因为已接受）
+    }
+    QString videoFilePath = selectedFiles.first();  // 选中的视频文件路径
+    QFileInfo fileInfo(videoFilePath);
+    // 6. 核心逻辑：选中视频文件 → 返回其所在文件夹路径
+    QString folderPath = fileInfo.absolutePath();  // 提取文件所在目录
+    // 7. 更新上次选择的路径（下次打开从此目录开始）
+    m_lastSelectedPath = folderPath;
+    // 8. 原有业务逻辑（使用文件夹路径）
+    if (!folderPath.isEmpty()) {
+        path = folderPath;  // 更新当前路径
+        manager->clear();   // 清空原有数据
+        qDebug() << "选中视频文件所在文件夹：" << path;
+        setLabelContent();  // 更新UI标签
+        QStringList videoList = getVideoList();  // 获取该文件夹下视频文件列表
+        manager->addByFilePathList(videoList);  // 加载视频列表
     }
 }
 /**
@@ -129,6 +158,11 @@ void PathSel::initTable()
     connect(tableWidget, &QTableWidget::cellDoubleClicked,
             this, &PathSel::onRowDoubleClicked);
 
+    int rowsToShow = 10;
+    int headerH = tableWidget->horizontalHeader()->height();
+    int rowH = tableWidget->verticalHeader()->defaultSectionSize();
+    int frame = tableWidget->frameWidth() * 2;
+    tableWidget->setMaximumHeight(headerH + rowH * rowsToShow + frame);
 
 }
 /**
