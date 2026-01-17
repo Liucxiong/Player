@@ -75,6 +75,7 @@ if(MINGW)
         avutil
         swscale
         swresample
+        avfilter      # 添加 avfilter 库
     )
 elseif(MSVC)
     target_link_directories(Player PRIVATE ${FFMPEG_DIR}/lib)
@@ -84,6 +85,7 @@ elseif(MSVC)
         avutil.lib
         swscale.lib
         swresample.lib
+        avfilter.lib  # 添加 avfilter 库
     )
 endif()
 
