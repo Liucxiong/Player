@@ -23,6 +23,10 @@ extern "C" {
 #include <libavutil/imgutils.h>
 #include <libavutil/time.h>
 #include <libavutil/channel_layout.h>
+#include <libavutil/opt.h>
+#include <libavfilter/avfilter.h>
+#include <libavfilter/buffersink.h>
+#include <libavfilter/buffersrc.h>
 }
 
 class VideoPlayer : public QObject
@@ -38,10 +42,10 @@ public:
     void stop();
     void seek(double positionSec);
 
-    void forward(double seconds);       //快进 n 秒 , 可正可负
+    void forward(double seconds);
     void setPlayRate(double rate);
 
-    void setRenderSize(int w, int h); // 新接口：设置渲染目标像素尺寸（乘 DPR）
+    void setRenderSize(int w, int h);
 
 signals:
     void frameReady(const QImage &img);
@@ -57,6 +61,8 @@ private:
     void decodeLoop();
     void clearQueue();
     void freeFFmpegResources();
+    bool initAudioFilter(double rate);
+    void cleanupAudioFilter();
 
     double videoPtsToSeconds(AVFrame *vframe);
 
@@ -72,6 +78,12 @@ private:
     AVCodecContext *audioCodecCtx = nullptr;
     int audioStreamIndex = -1;
     SwrContext *swrCtx = nullptr;
+
+    // audio filter graph for atempo
+    AVFilterGraph *audioFilterGraph = nullptr;
+    AVFilterContext *audioBufferSrcCtx = nullptr;
+    AVFilterContext *audioBufferSinkCtx = nullptr;
+    QMutex m_audioFilterMutex;
 
     // reuse frames/packets
     AVFrame *frame = nullptr;
@@ -99,8 +111,8 @@ private:
     QIODevice *audioIODevice = nullptr;
 
     // audio tracking
-    std::atomic<double> m_audioBasePts{ -1.0 };    // pts of first enqueued audio block
-    std::atomic<long long> m_audioPlayedSamples{0}; // number of samples (per channel) written to device
+    std::atomic<double> m_audioBasePts{-1.0};
+    std::atomic<long long> m_audioPlayedSamples{0};
     int m_audioOutChannels = 2;
     int m_audioSampleRate = 48000;
 
@@ -113,18 +125,18 @@ private:
     double m_playStartPts{0.0};
     bool m_playStarted{false};
 
-    // video scaler（用于在 decodeLoop 中按目标尺寸缩放）
+    // video scaler
     SwsContext *swsCtx = nullptr;
     QMutex m_swsMutex;
-    QMutex m_swrMutex;   // <--- 新增：保护 swrCtx 的互斥量
+    QMutex m_swrMutex;
     std::atomic<int> m_renderWidth{0};
     std::atomic<int> m_renderHeight{0};
-    std::atomic<bool> m_swsCtxNeedReset{false};  // 新增
+    std::atomic<bool> m_swsCtxNeedReset{false};
 
-    // pause accumulation: total paused milliseconds to subtract from elapsed
-    std::atomic<qint64> m_totalPausedMs{0}; // 在 decodeLoop 中读取
-    qint64 m_pauseStartMs{0};               // 记录 pause 开始时刻（仅在主线程修改）
+    // pause accumulation
+    std::atomic<qint64> m_totalPausedMs{0};
+    qint64 m_pauseStartMs{0};
 
-    std::atomic<double> m_playRate{1.0};  // 播放速度，1.0 = 正常，2.0 = 2倍速
-
+    std::atomic<double> m_playRate{1.0};
+    std::atomic<bool> m_audioFilterNeedReset{false};
 };
