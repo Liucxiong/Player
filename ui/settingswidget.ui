@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SettingsWidget</class>
+ <widget class="QWidget" name="SettingsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>481</width>
+    <height>385</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,4">
+   <property name="spacing">
+    <number>1</number>
+   </property>
+   <item>
+    <widget class="QListWidget" name="listWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QListWidget {
+    border-radius: 4px;
+}
+
+QListWidget::item {
+    color: #333;               /* 字体颜色 */
+    font-weight: bold;          /* 字体加粗 */
+}
+
+QListWidget::item:selected {
+    background-color: #3399ff;  /* 选中背景 */
+    color: white;               /* 选中字体颜色 */
+}
+</string>
+     </property>
+     <property name="spacing">
+      <number>4</number>
+     </property>
+     <item>
+      <property name="text">
+       <string>缩放算法</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>新建项目</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <widget class="QWidget" name="page_0">
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QRadioButton" name="radioButton">
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>SWS_FAST_BILINEAR - 速度最快，画质最差</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_2">
+             <property name="text">
+              <string>SWS_BILINEAR - 性能与画质平衡（推荐默认）</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_3">
+             <property name="text">
+              <string>SWS_BICUBIC - 画质更好，开销中等</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_4">
+             <property name="text">
+              <string>SWS_LANCZOS - 画质最好但最慢/最耗 CPU</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>### 缩放算法
+
+视频播放过程中，如果视频分辨率与显示窗口不一致，播放器会对画面进行缩放。
+
+不同的缩放算法在画质和性能上有不同表现：
+- **SWS_FAST_BILINEAR**：速度最快，画质最低，适合老机器或追求最低 CPU 使用的场景。  
+- **SWS_BILINEAR (推荐)**：性能与画质折中，是默认推荐选项。  
+- **SWS_BICUBIC**：画质更好，但需要更多 CPU 资源。  
+- **SWS_LANCZOS**：画质最佳，但最耗 CPU，可能导致低端设备卡顿。
+
+Tip: 若希望在低性能设备流畅播放，可选择快速的缩放算法，这将明显减轻CPU压力。
+</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::MarkdownText</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_1">
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>90</y>
+         <width>81</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>## 开发中ing</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::MarkdownText</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>listWidget</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
