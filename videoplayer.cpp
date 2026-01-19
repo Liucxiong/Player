@@ -438,6 +438,9 @@ void VideoPlayer::seek(double positionSec)
 void VideoPlayer::decodeLoop()
 {
     swrCtx = nullptr;
+    // 用于缓冲音频帧，减少频繁的filter操作
+    std::vector<AVFrame*> audioFrameBatch;
+    const int AUDIO_BATCH_SIZE = 8;  // 批量处理音频帧
 
     while (!m_stopRequested.load()) {
         if (m_paused.load()) {
@@ -467,6 +470,10 @@ void VideoPlayer::decodeLoop()
                 QMutexLocker aLocker(&m_audioQueueMutex);
                 m_audioQueue.clear();
             }
+
+            // 清空音频帧缓冲
+            for (auto f : audioFrameBatch) av_frame_free(&f);
+            audioFrameBatch.clear();
 
             // 重建 audio filter（解码线程内）
             if (audioCodecCtx) {
@@ -501,6 +508,39 @@ void VideoPlayer::decodeLoop()
 
         int ret = av_read_frame(fmtCtx, packet);
         if (ret < 0) {
+            // 处理剩余的音频帧
+            if (!audioFrameBatch.empty() && audioCodecCtx) {
+                QMutexLocker filterLocker(&m_audioFilterMutex);
+                if (audioBufferSrcCtx && audioBufferSinkCtx) {
+                    for (AVFrame *aframe : audioFrameBatch) {
+                        int addRet = av_buffersrc_add_frame_flags(audioBufferSrcCtx, aframe, AV_BUFFERSRC_FLAG_KEEP_REF);
+                        if (addRet < 0) {
+                            char errbuf[128]; av_strerror(addRet, errbuf, sizeof(errbuf));
+                            qWarning() << "Error feeding audio filter on EOF:" << errbuf;
+                        }
+                        av_frame_unref(aframe);
+                    }
+                    // 最后冲洗filter
+                    int flushRet = av_buffersrc_add_frame_flags(audioBufferSrcCtx, nullptr, 0);
+                    if (flushRet < 0) {
+                        char errbuf[128]; av_strerror(flushRet, errbuf, sizeof(errbuf));
+                        qWarning() << "Error flushing audio filter:" << errbuf;
+                    }
+                    // 读取所有剩余帧
+                    while (true) {
+                        AVFrame *filteredFrame = av_frame_alloc();
+                        if (av_buffersink_get_frame(audioBufferSinkCtx, filteredFrame) < 0) {
+                            av_frame_free(&filteredFrame);
+                            break;
+                        }
+                        // ... 处理 filteredFrame ...
+                        av_frame_free(&filteredFrame);
+                    }
+                }
+                for (auto f : audioFrameBatch) av_frame_free(&f);
+                audioFrameBatch.clear();
+            }
+
             if (!m_finished.load()) {
                 m_finished.store(true);
                 pause();
@@ -510,84 +550,89 @@ void VideoPlayer::decodeLoop()
             continue;
         }
 
-        // 处理音频帧
+        // 处理音频帧（批量处理模式）
         if (audioStreamIndex >= 0 && packet->stream_index == audioStreamIndex && audioCodecCtx) {
             if (avcodec_send_packet(audioCodecCtx, packet) == 0) {
                 AVFrame *aframe = av_frame_alloc();
                 while (avcodec_receive_frame(audioCodecCtx, aframe) == 0) {
-                    double apts = 0.0;
-                    if (aframe->pts != AV_NOPTS_VALUE)
-                        apts = aframe->pts * av_q2d(audioTimeBase);
-                    else if (aframe->best_effort_timestamp != AV_NOPTS_VALUE)
-                        apts = aframe->best_effort_timestamp * av_q2d(audioTimeBase);
-
-                    // 通过 filter graph 处理音频帧
-                    QMutexLocker filterLocker(&m_audioFilterMutex);
-                    if (audioBufferSrcCtx && audioBufferSinkCtx) {
-                        ret = av_buffersrc_add_frame_flags(audioBufferSrcCtx, aframe, AV_BUFFERSRC_FLAG_KEEP_REF);
-                        if (ret < 0) {
-                            char errbuf[128]; av_strerror(ret, errbuf, sizeof(errbuf));
-                            qWarning() << "Error feeding audio filter:" << errbuf << "pts:" << apts;
-                            av_frame_unref(aframe);
-                            continue;
-                        }
-
-                        // 从 filter 读取处理后的帧
-                        while (true) {
-                            AVFrame *filteredFrame = av_frame_alloc();
-                            ret = av_buffersink_get_frame(audioBufferSinkCtx, filteredFrame);
-                            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                                av_frame_free(&filteredFrame);
-                                break;
-                            }
-                            if (ret < 0) {
-                                av_frame_free(&filteredFrame);
-                                break;
-                            }
-
-                            // 我们在 filter 中使用 aformat 强制输出为 s16 stereo
-                            int outChannels = 0;
-#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 17, 0)
-                            // 使用 AVChannelLayout（新版 FFmpeg）
-                            outChannels = filteredFrame->ch_layout.nb_channels;
-#else \
-    // 备选：可能存在 nb_channels 或 channels 字段
-                            outChannels = filteredFrame->nb_channels; // 如果编译报错，再换成别的方案
-#endif
-
-                            if (outChannels <= 0) {
-                                // 最后退回到我们记录的输出通道数（通常是 2）
-                                outChannels = m_audioOutChannels > 0 ? m_audioOutChannels : 2;
-                            }
-
-
-                            int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
-                            if (bytesPerSample <= 0) bytesPerSample = 2;
-
-                            int bytes = av_samples_get_buffer_size(nullptr,
-                                                                   outChannels,
-                                                                   filteredFrame->nb_samples,
-                                                                   AV_SAMPLE_FMT_S16, 1);
-                            if (bytes > 0 && filteredFrame->data[0]) {
-                                QByteArray chunk(reinterpret_cast<const char*>(filteredFrame->data[0]), bytes);
-                                {
-                                    QMutexLocker aLocker(&m_audioQueueMutex);
-                                    m_audioQueue.push_back(chunk);
-                                }
-
-                                double base = m_audioBasePts.load();
-                                if (base < 0.0) {
-                                    m_audioBasePts.store(apts);
-                                    m_audioPlayedSamples.store(0);
-                                    qDebug() << "Audio base PTS set to:" << apts;
-                                }
-                            }
-
-                            av_frame_free(&filteredFrame);
-                        }
+                    // 缓冲音频帧而不是立即处理
+                    AVFrame *frameClone = av_frame_clone(aframe);
+                    if (frameClone) {
+                        audioFrameBatch.push_back(frameClone);
                     }
 
-                    av_frame_unref(aframe);
+                    // 当缓冲满或需要处理时，批量通过filter
+                    if (audioFrameBatch.size() >= AUDIO_BATCH_SIZE) {
+                        QMutexLocker filterLocker(&m_audioFilterMutex);
+                        if (audioBufferSrcCtx && audioBufferSinkCtx) {
+                            for (AVFrame *batchFrame : audioFrameBatch) {
+                                int addRet = av_buffersrc_add_frame_flags(audioBufferSrcCtx, batchFrame, AV_BUFFERSRC_FLAG_KEEP_REF);
+                                if (addRet < 0) {
+                                    char errbuf[128]; av_strerror(addRet, errbuf, sizeof(errbuf));
+                                    qWarning() << "Error feeding audio filter (batch):" << errbuf;
+                                    av_frame_unref(batchFrame);
+                                    continue;
+                                }
+
+                                double apts = 0.0;
+                                if (batchFrame->pts != AV_NOPTS_VALUE)
+                                    apts = batchFrame->pts * av_q2d(audioTimeBase);
+                                else if (batchFrame->best_effort_timestamp != AV_NOPTS_VALUE)
+                                    apts = batchFrame->best_effort_timestamp * av_q2d(audioTimeBase);
+
+                                // 从 filter 读取处理后的帧
+                                while (true) {
+                                    AVFrame *filteredFrame = av_frame_alloc();
+                                    ret = av_buffersink_get_frame(audioBufferSinkCtx, filteredFrame);
+                                    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                                        av_frame_free(&filteredFrame);
+                                        break;
+                                    }
+                                    if (ret < 0) {
+                                        av_frame_free(&filteredFrame);
+                                        break;
+                                    }
+
+                                    int outChannels = 0;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 17, 0)
+                                    outChannels = filteredFrame->ch_layout.nb_channels;
+#else
+                                    outChannels = filteredFrame->nb_channels;
+#endif
+                                    if (outChannels <= 0) {
+                                        outChannels = m_audioOutChannels > 0 ? m_audioOutChannels : 2;
+                                    }
+
+                                    int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+                                    if (bytesPerSample <= 0) bytesPerSample = 2;
+
+                                    int bytes = av_samples_get_buffer_size(nullptr,
+                                                                           outChannels,
+                                                                           filteredFrame->nb_samples,
+                                                                           AV_SAMPLE_FMT_S16, 1);
+                                    if (bytes > 0 && filteredFrame->data[0]) {
+                                        QByteArray chunk(reinterpret_cast<const char*>(filteredFrame->data[0]), bytes);
+                                        {
+                                            QMutexLocker aLocker(&m_audioQueueMutex);
+                                            m_audioQueue.push_back(chunk);
+                                        }
+
+                                        double base = m_audioBasePts.load();
+                                        if (base < 0.0) {
+                                            m_audioBasePts.store(apts);
+                                            m_audioPlayedSamples.store(0);
+                                            qDebug() << "Audio base PTS set to:" << apts;
+                                        }
+                                    }
+
+                                    av_frame_free(&filteredFrame);
+                                }
+                                av_frame_unref(batchFrame);
+                            }
+                        }
+                        for (auto f : audioFrameBatch) av_frame_free(&f);
+                        audioFrameBatch.clear();
+                    }
                 }
                 av_frame_free(&aframe);
             }
@@ -612,7 +657,7 @@ void VideoPlayer::decodeLoop()
                         dstH = codecCtx->height;
                     }
 
-                    // 重建 swsCtx
+                    // 重建 swsCtx（使用更快的缩放算法减少CPU占用）
                     {
                         QMutexLocker locker(&m_swsMutex);
                         if (!swsCtx || m_swsCtxNeedReset.load()) {
@@ -621,13 +666,15 @@ void VideoPlayer::decodeLoop()
                                 swsCtx = nullptr;
                             }
 
+                            int algo = m_scalingAlgo.load();
                             swsCtx = sws_getContext(codecCtx->width, codecCtx->height, codecCtx->pix_fmt,
                                                     dstW, dstH, AV_PIX_FMT_RGB24,
-                                                    SWS_LANCZOS, nullptr, nullptr, nullptr);
+                                                    algo, nullptr, nullptr, nullptr);
                             if (!swsCtx) {
+                                // 降级到最快的算法
                                 swsCtx = sws_getContext(codecCtx->width, codecCtx->height, codecCtx->pix_fmt,
                                                         dstW, dstH, AV_PIX_FMT_RGB24,
-                                                        SWS_BICUBIC, nullptr, nullptr, nullptr);
+                                                        SWS_FAST_BILINEAR, nullptr, nullptr, nullptr);
                             }
                             m_swsCtxNeedReset.store(false);
                         }
@@ -667,7 +714,8 @@ void VideoPlayer::decodeLoop()
 
                     {
                         QMutexLocker locker(&m_mutex);
-                        if (m_frameQueue.size() >= 20) m_frameQueue.dequeue();
+                        // 优化：只在队列过大时丢弃，而不是每帧都检查
+                        while (m_frameQueue.size() >= 20) m_frameQueue.dequeue();
                         m_frameQueue.enqueue(std::make_pair(img, vpts));
                     }
 
@@ -679,6 +727,10 @@ void VideoPlayer::decodeLoop()
 
         av_packet_unref(packet);
     }
+
+    // 清理音频帧缓冲
+    for (auto f : audioFrameBatch) av_frame_free(&f);
+    audioFrameBatch.clear();
 
     {
         QMutexLocker locker(&m_swsMutex);

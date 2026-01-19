@@ -46,6 +46,13 @@ public:
     void setPlayRate(double rate);
 
     void setRenderSize(int w, int h);
+    // 优化：设置视频缩放算法（权衡质量和性能）
+    // SWS_FAST_BILINEAR - 最快但质量最差
+    // SWS_BILINEAR - 平衡
+    // SWS_BICUBIC - 较好质量
+    // SWS_LANCZOS - 最好质量但最慢（默认不用）
+    const QVector<int> scalingAlgorithm = {SWS_FAST_BILINEAR,SWS_BILINEAR,SWS_BICUBIC,SWS_LANCZOS};
+    void setScalingAlgorithm(int algo) { m_scalingAlgo.store(algo); m_swsCtxNeedReset.store(true); }
 
 signals:
     void frameReady(const QImage &img);
@@ -132,6 +139,7 @@ private:
     std::atomic<int> m_renderWidth{0};
     std::atomic<int> m_renderHeight{0};
     std::atomic<bool> m_swsCtxNeedReset{false};
+    std::atomic<int> m_scalingAlgo{SWS_BILINEAR};  // 快速缩放算法，减少CPU
 
     // pause accumulation
     std::atomic<qint64> m_totalPausedMs{0};
