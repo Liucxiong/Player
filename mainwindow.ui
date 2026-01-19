@@ -48,7 +48,7 @@
          </property>
          <item>
           <widget class="QWidget" name="widget_3" native="true">
-           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,8">
             <item>
              <widget class="QLabel" name="label_3">
               <property name="text">
@@ -203,6 +203,12 @@
           </item>
           <item>
            <widget class="QWidget" name="widget_2" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <layout class="QHBoxLayout" name="horizontalLayout">
              <property name="spacing">
               <number>8</number>
@@ -253,6 +259,28 @@
                <property name="toolTip">
                 <string>上一集</string>
                </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+    border: none;                 /* 取消边框 */
+    background: transparent;      /* 默认透明 */
+    padding: 3px;                 /* 给点击区域一点呼吸感 */
+    border-radius: 3px;           /* 轻微圆角，不夸张 */
+}
+
+/* 鼠标悬停：轻微高亮 */
+QPushButton:hover {
+    background-color: rgba(180, 180, 180, 40);   /* 浅灰，不压 SVG */
+}
+
+/* 按下瞬间：模拟“轻微按压” */
+QPushButton:pressed {
+    background-color: rgba(160, 160, 160, 70);
+    padding-top: 7px;             /* 视觉下沉 */
+    padding-left: 7px;
+}
+
+</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -262,8 +290,8 @@
                </property>
                <property name="iconSize">
                 <size>
-                 <width>20</width>
-                 <height>20</height>
+                 <width>25</width>
+                 <height>25</height>
                 </size>
                </property>
                <property name="checkable">
@@ -283,7 +311,26 @@
                 <string>播放</string>
                </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">QPushButton {
+    border: none;                 /* 取消边框 */
+    background: transparent;      /* 默认透明 */
+    padding: 3px;                 /* 给点击区域一点呼吸感 */
+    border-radius: 3px;           /* 轻微圆角，不夸张 */
+}
+
+/* 鼠标悬停：轻微高亮 */
+QPushButton:hover {
+    background-color: rgba(180, 180, 180, 40);   /* 浅灰，不压 SVG */
+}
+
+/* 按下瞬间：模拟“轻微按压” */
+QPushButton:pressed {
+    background-color: rgba(160, 160, 160, 70);
+    padding-top: 7px;             /* 视觉下沉 */
+    padding-left: 7px;
+}
+
+</string>
                </property>
                <property name="text">
                 <string/>
@@ -295,8 +342,8 @@
                </property>
                <property name="iconSize">
                 <size>
-                 <width>20</width>
-                 <height>20</height>
+                 <width>25</width>
+                 <height>25</height>
                 </size>
                </property>
                <property name="checkable">
@@ -315,6 +362,27 @@
                <property name="toolTip">
                 <string>下一集</string>
                </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+    border: none;                 /* 取消边框 */
+    background: transparent;      /* 默认透明 */
+    padding: 3px;                 /* 给点击区域一点呼吸感 */
+    border-radius: 3px;           /* 轻微圆角，不夸张 */
+}
+
+/* 鼠标悬停：轻微高亮 */
+QPushButton:hover {
+    background-color: rgba(180, 180, 180, 40);   /* 浅灰，不压 SVG */
+}
+
+/* 按下瞬间：模拟“轻微按压” */
+QPushButton:pressed {
+    background-color: rgba(160, 160, 160, 70);
+    padding-top: 7px;             /* 视觉下沉 */
+    padding-left: 7px;
+}
+</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -324,8 +392,8 @@
                </property>
                <property name="iconSize">
                 <size>
-                 <width>20</width>
-                 <height>20</height>
+                 <width>25</width>
+                 <height>25</height>
                 </size>
                </property>
                <property name="checkable">
@@ -344,6 +412,32 @@
                <property name="toolTip">
                 <string>全屏</string>
                </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+    border: none;                 /* 取消边框 */
+    background: transparent;      /* 默认透明 */
+    padding: 3px;                 /* 给点击区域一点呼吸感 */
+    border-radius: 3px;           /* 轻微圆角，不夸张 */
+}
+
+/* 鼠标悬停：轻微高亮 */
+QPushButton:hover {
+    background-color: rgba(180, 180, 180, 40);   /* 浅灰，不压 SVG */
+}
+
+/* 按下瞬间：模拟“轻微按压” */
+QPushButton:pressed {
+    background-color: rgba(160, 160, 160, 70);
+    padding-top: 7px;             /* 视觉下沉 */
+    padding-left: 7px;
+}
+
+/* 选中状态（比如全屏按钮） */
+QPushButton:checked {
+    background-color: rgba(120, 180, 255, 80);   /* 浅蓝，不刺眼 */
+}
+</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -353,8 +447,8 @@
                </property>
                <property name="iconSize">
                 <size>
-                 <width>20</width>
-                 <height>20</height>
+                 <width>25</width>
+                 <height>25</height>
                 </size>
                </property>
                <property name="checkable">
@@ -457,6 +551,61 @@ QComboBox QAbstractItemView {
                  <string>3.0x</string>
                 </property>
                </item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_5">
+               <property name="toolTip">
+                <string>设置</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+    border: none;                 /* 取消边框 */
+    background: transparent;      /* 默认透明 */
+    padding: 3px;                 /* 给点击区域一点呼吸感 */
+    border-radius: 3px;           /* 轻微圆角，不夸张 */
+}
+
+/* 鼠标悬停：轻微高亮 */
+QPushButton:hover {
+    background-color: rgba(180, 180, 180, 40);   /* 浅灰，不压 SVG */
+}
+
+/* 按下瞬间：模拟“轻微按压” */
+QPushButton:pressed {
+    background-color: rgba(160, 160, 160, 70);
+    padding-top: 7px;             /* 视觉下沉 */
+    padding-left: 7px;
+}
+
+/* 选中状态（比如全屏按钮） */
+QPushButton:checked {
+    background-color: rgba(120, 180, 255, 80);   /* 浅蓝，不刺眼 */
+}
+</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/icons/settings.svg</normaloff>:/icons/icons/settings.svg</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>25</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
+               <property name="default">
+                <bool>false</bool>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
               </widget>
              </item>
              <item>

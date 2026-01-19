@@ -10,6 +10,8 @@
 #include "videoplayer.h"
 #include "fullscreentool.h"
 
+#include "ui/settingswidget.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -36,6 +38,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    SettingsWidget *m_settings = nullptr;
+
     PathSel* pathSel;
     VideoPlayer* player;
     VideoManager* manager;

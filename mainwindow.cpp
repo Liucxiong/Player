@@ -8,15 +8,41 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    // UI 初始化
     ui->setupUi(this);
+    m_settings = new SettingsWidget(this);
+
+    m_settings->setWindowTitle("Settings");
+    m_settings->setWindowFlag(Qt::Dialog);
+    m_settings->setAttribute(Qt::WA_DeleteOnClose, false); // 不自动删除
+
+    connect(ui->pushButton_5, &QPushButton::clicked, this, [this]{
+        if (!m_settings) {
+            m_settings = new SettingsWidget(this);
+            m_settings->setWindowFlag(Qt::Dialog);
+        }
+        m_settings->show();
+        m_settings->raise();
+        m_settings->activateWindow();
+    });
+    // ui->pushButton_5->click();
+    connect(m_settings,&SettingsWidget::scalingAlgorithmChanged,this,[=](int index){
+        if(index < 0 || index >= 4) return ;
+        if(index == manager->m_scalingAlgo) return ;
+        qDebug() << "缩放算法改为：" << index;
+        manager->m_scalingAlgo = index;
+        player->setScalingAlgorithm(player->scalingAlgorithm[index]);
+    });
+
+    // 成员对象初始化
     manager = new VideoManager(this);
     pathSel = new PathSel(ui->tableWidget,ui->label_4, ui->toolButton, manager,
                           ui->label_2, ui->pushButton_3, ui->pushButton);
 
+
     connect(manager, &VideoManager::videosUpdated, this, [=]() {
         qDebug() << "视频列表更新，总数：" << manager->videos().size();
     });
-
     player = new VideoPlayer(this);
 
     // 初始化全屏窗口
@@ -235,6 +261,22 @@ void MainWindow::onPlayPauseClicked()
     }
 }
 /**
+ * @brief 播放速率选择
+ */
+void MainWindow::currentIndexSpeedChanged(int index)
+{
+    qDebug() << "Change Index to " << index;
+    if(index < 0 || index >= manager->speedList.size()) return;
+    if(std::abs(manager->playSpeed - manager->speedList[index]) < 0.01) return;
+
+    manager->playSpeed = manager->speedList[index];
+
+    // 不暂停，直接切换（推荐）
+    player->setPlayRate(manager->playSpeed);
+    qDebug() << "Change Rate to " << manager->playSpeed;
+}
+
+/**
  * @brief 滑动条和tip和视频窗口初始化函数
  */
 void MainWindow::SlideFuncInit(){
@@ -252,12 +294,14 @@ void MainWindow::SlideFuncInit(){
     m_sliderTip->hide();
 
     QSize screenSize = qApp->primaryScreen()->size();
-    QSize targetSize(screenSize.width() / 2, screenSize.height() / 2);
+    QSize targetSize(screenSize.width() * 0.54, screenSize.height() * 0.54);
     // 固定视频窗口大小
     ui->label->setFixedSize(targetSize);
-    ui->label->setScaledContents(false); // 禁止自动拉伸变形
+    // ui->label->setScaledContents(false); // 禁止自动拉伸变形
 }
-
+/**
+ * @brief 快捷键设置
+ */
 void MainWindow::KeysInit(){
     // 播放 / 暂停：空格
     auto *playShortcut = new QShortcut(QKeySequence(Qt::Key_Space), this);
@@ -284,7 +328,7 @@ void MainWindow::KeysInit(){
     forwardShortcut->setContext(Qt::ApplicationShortcut);
     forwardShortcut->setAutoRepeat(false); // 禁用自动重复
     connect(forwardShortcut, &QShortcut::activated, this, [this]() {
-        player->forward(5.0);
+        player->forward(10.0);
     });
     // 后退 5 秒：左
     auto *backwardShortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
@@ -295,16 +339,4 @@ void MainWindow::KeysInit(){
     });
 }
 
-void MainWindow::currentIndexSpeedChanged(int index)
-{
-    qDebug() << "Change Index to " << index;
-    if(index < 0 || index >= manager->speedList.size()) return;
-    if(std::abs(manager->playSpeed - manager->speedList[index]) < 0.01) return;
-
-    manager->playSpeed = manager->speedList[index];
-
-    // 方案1: 不暂停，直接切换（推荐）
-    player->setPlayRate(manager->playSpeed);
-    qDebug() << "Change Rate to " << manager->playSpeed;
-}
 
