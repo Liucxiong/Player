@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Player VERSION 0.1 LANGUAGES CXX)
+project(Player VERSION 2.0.0 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -40,7 +40,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         fullscreentool.h
         Player.rc
         README.md
-        Readme_Info/main-page.png Readme_Info/p1.png
+
+        ui/settingswidget.h ui/settingswidget.cpp ui/settingswidget.ui
     )
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()

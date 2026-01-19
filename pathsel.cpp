@@ -52,12 +52,12 @@ PathSel::PathSel(QTableWidget* tableWidget, QLabel* pathLabel, QToolButton* butt
         onRowDoubleClicked(row,0);
     });
 
-    path = "D:/python_code/pa_chong";
-    this->manager->clear();
-    qDebug() << "Now Path: "<< path;
-    setLabelContent();
-    QStringList list =  getVideoList();
-    this->manager->addByFilePathList(list);
+    // path = "D:/python_code/pa_chong/OutVideo";
+    // this->manager->clear();
+    // qDebug() << "Now Path: "<< path;
+    // setLabelContent();
+    // QStringList list =  getVideoList();
+    // this->manager->addByFilePathList(list);
 }
 /**
  * @brief 槽函数，文件选择关键函数
@@ -258,6 +258,8 @@ QStringList PathSel::getVideoList(){
             << "*.flv" << "*.wmv" << "*.mpeg" << "*.mpg";
     // 获取文件
     QStringList videoFiles = dir.entryList(filters, QDir::Files | QDir::NoSymLinks);
+    // 按名称排序
+    videoFiles.sort(Qt::CaseInsensitive);  // 不区分大小写排序（推荐）
     // 带路径返回（可选）
     for (int i = 0; i < videoFiles.size(); ++i) {
         videoFiles[i] = dir.absoluteFilePath(videoFiles[i]);
