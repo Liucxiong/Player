@@ -5,6 +5,8 @@
 #include <QVBoxLayout>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QTimer>
+#include <QCursor>
 #include <QProgressBar>
 
 /**
@@ -39,6 +41,9 @@ public:
         bLay->setContentsMargins(8, 6, 8, 8); // left, top, right, bottom
         bLay->setSpacing(0);
 
+        // 始终为进度条保留固定高度，避免进度条显隐导致视频区域大小变化
+        bottom->setFixedHeight(20); // 为进度条保留 ~20px 空间
+
         // VERY THIN subtle progress bar (一直显示时尽量低调)
         m_progress = new QProgressBar(bottom);
         m_progress->setTextVisible(false);
@@ -65,6 +70,16 @@ public:
         // 初始隐藏（进入全屏时可 showProgress(true)）
         m_progress->hide();
 
+        // 控制项可见性状态
+        m_controlsVisible = true;
+        m_progressRequested = false;
+
+        // 3 秒无鼠标活动后隐藏鼠标与进度条
+        m_hideTimer = new QTimer(this);
+        m_hideTimer->setSingleShot(true);
+        connect(m_hideTimer, &QTimer::timeout, this, &FullScreenWindow::hideControls);
+        m_hideTimer->start(3000);
+
         // 允许接收鼠标移动（如果你想在鼠标移动时做别的交互）
         setMouseTracking(true);
         m_label->setMouseTracking(true);
@@ -89,7 +104,9 @@ public:
 
     // 控制进度条显隐（现在显示后不会自动隐藏）
     void showProgress(bool show) {
-        if (show) {
+        m_progressRequested = show;
+        // 仅当控件处于可见状态时才真正显示进度条；否则记录意图
+        if (m_controlsVisible && show) {
             m_progress->show();
         } else {
             m_progress->hide();
@@ -110,7 +127,35 @@ protected:
         emit exitRequested();
     }
 
+    void mouseMoveEvent(QMouseEvent *e) override {
+        // 鼠标移动时显示控件并重置隐藏计时器
+        showControls();
+        if (m_hideTimer) m_hideTimer->start(3000);
+        QWidget::mouseMoveEvent(e);
+    }
+
 private:
     QLabel *m_label = nullptr;
     QProgressBar *m_progress = nullptr;
+    QTimer *m_hideTimer = nullptr;
+    bool m_controlsVisible = true;
+    bool m_progressRequested = false;
+
+    void hideControls() {
+        if (!m_controlsVisible) return;
+        m_controlsVisible = false;
+        // 隐藏鼠标
+        setCursor(Qt::BlankCursor);
+        // 隐藏进度条（但底部空间仍保留）
+        m_progress->hide();
+    }
+
+    void showControls() {
+        if (m_controlsVisible) return;
+        m_controlsVisible = true;
+        // 恢复默认鼠标
+        unsetCursor();
+        // 如果用户之前请求显示进度条，则恢复显示
+        if (m_progressRequested) m_progress->show();
+    }
 };
