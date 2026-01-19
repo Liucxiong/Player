@@ -25,7 +25,7 @@
 ---
 ## v2.0.0 使用教程
 1. 在此项目主页的 [Releases](https://github.com/Liucxiong/Player/releases) 页面找到最新发布版本压缩包并下载到本地。
-2. 将压缩包解压后打开，找到名为 **Player.exe** 的可执行文件，双击运行。
+2. 将压缩包解压后打开，找到名为 **Player.exe** 的可执行文件，双击运行(可以为该文件创建快捷方式，复制到桌面方便使用)。
 ![图 1](Readme_Info/image0.png)
 3. 这是主界面
 ![图 2](Readme_Info/image1.png)
@@ -35,6 +35,8 @@
 ![图 4](Readme_Info/image3.png)
 6. 双击右侧列表中的任意视频文件即可播放视频
 ![图 5](Readme_Info/image4.png)
+7. **卸载**：关闭程序后，直接将整个软件文件夹删除即可
+
 
 ---
 ## 快捷键一图流
