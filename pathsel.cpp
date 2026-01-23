@@ -322,4 +322,3 @@ void PathSel::updateInfoLabel()
 
     infoLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 }
-

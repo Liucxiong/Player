@@ -14,6 +14,7 @@ class PathSel: public QObject
     Q_OBJECT
 private:
     QTableWidget* tableWidget;
+
     QLabel* pathLabel;
     QLabel* infoLabel;
     QToolButton* button;
@@ -23,7 +24,6 @@ private:
     QString m_lastSelectedPath;  // 保存上次选择的路径
 
     VideoManager* manager;
-
 
     void setLabelContent();
     QStringList getVideoList();
