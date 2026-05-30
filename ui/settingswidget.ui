@@ -51,13 +51,16 @@ QListWidget::item:selected {
      </item>
      <item>
       <property name="text">
-       <string>新建项目</string>
+       <string>重置设置</string>
       </property>
      </item>
     </widget>
    </item>
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
      <widget class="QWidget" name="page_0">
       <property name="layoutDirection">
        <enum>Qt::LeftToRight</enum>
@@ -135,25 +138,51 @@ Tip: 若希望在低性能设备流畅播放，可选择快速的缩放算法，
       </layout>
      </widget>
      <widget class="QWidget" name="page_1">
-      <widget class="QLabel" name="label_2">
-       <property name="geometry">
-        <rect>
-         <x>200</x>
-         <y>90</y>
-         <width>81</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>## 开发中ing</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::MarkdownText</enum>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout_4" stretch="4,0">
+         <property name="leftMargin">
+          <number>10</number>
+         </property>
+         <property name="topMargin">
+          <number>10</number>
+         </property>
+         <property name="rightMargin">
+          <number>10</number>
+         </property>
+         <property name="bottomMargin">
+          <number>10</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>## 点击按钮将设置重置
+ ### 请注意重置后，所有的播放参数将恢复为默认值，播放记录也将被清除！！！</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::MarkdownText</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="resetButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>重置设置</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>

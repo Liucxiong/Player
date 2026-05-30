@@ -8,5 +8,9 @@
         <file>icons/fullscreen.svg</file>
         <file>icons/winIcon.svg</file>
         <file>icons/winIcon.ico</file>
+        <file>icons/default_music.svg</file>
+        <file>icons/volume-low.svg</file>
+        <file>icons/volume-high.svg</file>
+        <file>icons/volume-mute.svg</file>
     </qresource>
 </RCC>

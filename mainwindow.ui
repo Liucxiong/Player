@@ -350,6 +350,21 @@ QPushButton:checked {
               </widget>
              </item>
              <item>
+              <widget class="VolumeButton" name="volumebtn">
+               <property name="styleSheet">
+                <string notr="true">QToolButton::menu-indicator { image: none; }
+QToolButton { border: none; }</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/icons/volume-high.svg</normaloff>:/icons/icons/volume-high.svg</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QComboBox" name="comboBox">
                <property name="enabled">
                 <bool>true</bool>
@@ -665,6 +680,13 @@ QPushButton:checked {
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>VolumeButton</class>
+   <extends>QToolButton</extends>
+   <header>components/volumebutton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="resources.qrc"/>
  </resources>

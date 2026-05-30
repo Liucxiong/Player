@@ -42,6 +42,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         README.md
 
         ui/settingswidget.h ui/settingswidget.cpp ui/settingswidget.ui
+        appconfig.h appconfig.cpp
+        components/volumebutton.h components/volumebutton.cpp
     )
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
@@ -56,6 +58,11 @@ endif()
 # ======================================================
 # 链接 Qt 模块（已移除 OpenGLWidgets / OpenGL）
 # ======================================================
+target_include_directories(Player PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/components
+    ${CMAKE_CURRENT_SOURCE_DIR}/ui
+)
 target_link_libraries(Player PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Multimedia

@@ -5,12 +5,15 @@
 #include <QTableWidget>
 #include <QLabel>
 #include <QToolButton>
+#include <QDir>
 
 #include "pathsel.h"
 #include "videoplayer.h"
 #include "fullscreentool.h"
+#include "appconfig.h"
 
 #include "ui/settingswidget.h"
+// #include "components/volumebutton.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -39,6 +42,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     SettingsWidget *m_settings = nullptr;
+    // VolumeButton   *m_volumeBtn = nullptr;
 
     PathSel* pathSel;
     VideoPlayer* player;
@@ -50,16 +54,22 @@ private:
     FullScreenWindow *m_fullScreen;   // 全屏窗口
     QLabel *m_currentTarget;          // 当前显示目标（主UI 或 全屏UI）
     bool m_isFullScreen = false;
+    bool m_firstFileOpened = false;  // 新增：是否已经打开过第一个文件
 
     QImage m_lastFrame;        // 缓存最新视频帧
     QMutex m_frameMutex;       // 保护 m_lastFrame
+    AppConfig m_config;        // 本地配置
 
 private:
     void SlideFuncInit();
     void KeysInit();                    //快捷键绑定函数
 
-    void safeUpdatePixmap(); // 用于主线程刷新 pixmap
+    QTimer *m_saveTimer = nullptr;   // 配置延迟写入定时器
+    void scheduleSave();             // 防抖写入
 
+    void safeUpdatePixmap(); // 用于主线程刷新 pixmap
+    void loadConfig();         // 启动时从 config.json 恢复配置
+    void saveConfig();         // 退出/切换时写入 config.json
 };
 #endif // MAINWINDOW_H
 

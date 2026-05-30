@@ -11,12 +11,15 @@ class SettingsWidget : public QWidget
 public:
     explicit SettingsWidget(QWidget *parent = nullptr);
     ~SettingsWidget();
-
+protected:
+    void keyPressEvent(QKeyEvent *e) override;
 private:
     void playQualityInit();
+    void resetRequestedInit();
 
 signals:
     void scalingAlgorithmChanged(int algo);
+    void resetRequested();   // 新增
 
 private:
     Ui::SettingsWidget *ui;   // ← 必须有
