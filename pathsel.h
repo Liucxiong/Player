@@ -43,8 +43,10 @@ public:
     PathSel(QTableWidget* tableWidget, QLabel* pathLabel, QToolButton* button, VideoManager* manager,
             QLabel* infoLabel, QPushButton* Next, QPushButton* Last);
     QString getPath();
+    void loadDirectory(const QString &dirPath);  // 加载指定目录的文件列表
 
     void initTable();
+    void clearAll();   // 清空文件列表和路径显示
 };
 
 #endif // PATHSEL_H

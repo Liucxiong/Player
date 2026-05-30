@@ -3,49 +3,76 @@
 
 #include <QString>
 #include <QDateTime>
+#include <QImage>
+#include <cstdint>
 
 /**
- * @brief 视频文件类
+ * @brief 视频/音频文件类
  */
 class VideoFile
-{   
+{
 public:
+    enum MediaType { Media_Video = 0, Media_Audio = 1, Media_Unknown = 2 };
+
     VideoFile(const QString &path);
 
-    QString fileName() const;           //文件名
-    QString fullPath() const;           //文件绝对路径
-    double sizeMB() const;              //文件大小（MB）
-    QString lastChangedStr() const;     //格式化的最后修改时间
-    QDateTime lastChanged() const;      //原始修改时间
+    QString fileName() const;
+    QString fullPath() const;
+    double sizeMB() const;
+    QString lastChangedStr() const;
+    QDateTime lastChanged() const;
 
-    // 🔹 获取视频时长
-    void Init();          //初始化调用获取总时长
-    QString durationStr() const; // 返回格式化时长
-    double getNumDuration() const;  //获取数字类型时长
+    MediaType mediaType = Media_Unknown;
 
-    void printInfo() const;  // 序列化输出
-    static const QString FormatStr(const double & nums);    //静态函数转为格式化的串
+    void VideoInit();
+    QString durationStr() const;
+    double getNumDuration() const;
+
+    void printInfo() const;
+    static const QString FormatStr(const double & nums);
 
     // getters
     int getWidth() const;
     int getHeight() const;
-    QString getFormat() const;
-    QString getCode() const;
+    QString getVideoCodec() const;
+    QString getContainer() const;
     QString getFps() const;
     int getChannels() const;
+    int getSampleRate() const;
     int64_t getBitrate() const;
 
+    // 嵌入元数据
+    bool     hasCoverArt() const;
+    QImage   getCoverArt() const;
+    bool     hasLyrics() const;
+    QString  getLyrics() const;
+    QString  getTitle() const;
+    QString  getArtist() const;
+    QString  getAlbum() const;
+
 private:
-    QString m_path;         //视频文件路径
-    double m_duration{-1}; // 缓存视频总时长，-1表示未计算
+    QString m_path;         // 文件路径
+    double m_duration{-1};  // 缓存总时长，-1表示未计算
 
-    int __width, __height;  //分辨率
-    QString __format;   //视频编码
-    QString __code;     //容器格式
-    QString __fps;      //帧率
-    int __channels;     //声道数
-    int64_t __bitrate;  // bps
+    // 视频属性
+    int __width{0}, __height{0};  // 分辨率
+    QString __videoCodec;         // 视频编码名称
+    QString __container;          // 容器格式名称
+    QString __fps;                // 帧率字符串
 
+    // 音频属性
+    int __channels{0};            // 声道数
+    int __sampleRate{0};          // 采样率
+
+    // 通用
+    int64_t __bitrate{0};         // bps
+
+    // 嵌入元数据
+    QImage  __coverArt;           // 封面图片
+    QString __lyrics;             // 歌词
+    QString __title;              // 标题 (ID3 TIT2)
+    QString __artist;             // 艺术家 (ID3 TPE1)
+    QString __album;              // 专辑名 (ID3 TALB)
 };
 
 #endif // VIDEOFILE_H

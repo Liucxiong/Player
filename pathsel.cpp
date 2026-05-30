@@ -71,16 +71,18 @@ void PathSel::chooseDirectory()
 
     // 2. 创建文件对话框（仅选文件，不选文件夹）
     QFileDialog dialog(nullptr, "选择视频文件", initialDir);
-    // 3. 关键配置（仅允许选视频文件，不允许选文件夹）
+    // 3. 关键配置（仅允许选音视频文件，不允许选文件夹）
     dialog.setFileMode(QFileDialog::ExistingFile);  // 仅允许选择单个现有文件（不允许文件夹）
-    dialog.setNameFilter("视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)");  // 只显示视频文件
+    dialog.setNameFilter("所有媒体文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv *.mp3 *.aac *.wav *.flac *.ogg *.opus *.m4a);;"
+                         "视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv);;"
+                         "音频文件 (*.mp3 *.aac *.wav *.flac *.ogg *.opus *.m4a)");
     dialog.setViewMode(QFileDialog::Detail);  // 详细视图（方便查看文件信息）
     dialog.setOption(QFileDialog::DontUseNativeDialog, true);  // 使用Qt统一对话框（避免原生对话框限制）
-    // 4. 显示对话框（用户只能选择视频文件，无法选文件夹）
+    // 4. 显示对话框（用户只能选择文件，无法选文件夹）
     if (dialog.exec() != QDialog::Accepted) {
         return;  // 用户取消选择
     }
-    // 5. 获取选中的视频文件路径（安全方式，避免临时对象问题）
+    // 5. 获取选中的文件路径（安全方式，避免临时对象问题）
     QStringList selectedFiles = dialog.selectedFiles();
     if (selectedFiles.isEmpty()) {
         return;  // 安全检查（理论上不会为空，因为已接受）
@@ -95,7 +97,7 @@ void PathSel::chooseDirectory()
     if (!folderPath.isEmpty()) {
         path = folderPath;  // 更新当前路径
         manager->clear();   // 清空原有数据
-        qDebug() << "选中视频文件所在文件夹：" << path;
+        qDebug() << "选中音视频文件所在文件夹：" << path;
         setLabelContent();  // 更新UI标签
         QStringList videoList = getVideoList();  // 获取该文件夹下视频文件列表
         manager->addByFilePathList(videoList);  // 加载视频列表
@@ -165,6 +167,17 @@ void PathSel::initTable()
     tableWidget->setMaximumHeight(headerH + rowH * rowsToShow + frame);
 
 }
+
+void PathSel::clearAll()
+{
+    path.clear();
+    m_lastSelectedPath.clear();
+    manager->clear();          // 清列表 + selected = -1 + 触发 updateTable
+    pathLabel->setText("");
+    pathLabel->setToolTip("");
+    infoLabel->setText("");
+}
+
 /**
  * @brief 鼠标悬浮某一行改变其样式
  * @param index
@@ -238,6 +251,21 @@ QString PathSel::getPath(){
     return path;
 }
 /**
+ * @brief 加载指定目录的文件列表 (用于配置恢复)
+ * @param dirPath 目录路径
+ */
+void PathSel::loadDirectory(const QString &dirPath)
+{
+    if (dirPath.isEmpty() || !QDir(dirPath).exists()) return;
+
+    path = dirPath;
+    m_lastSelectedPath = dirPath;
+    manager->clear();
+    setLabelContent();
+    QStringList list = getVideoList();
+    manager->addByFilePathList(list);
+}
+/**
  * @brief 为路径区域设置路径名
  */
 void PathSel::setLabelContent(){
@@ -253,31 +281,44 @@ void PathSel::setLabelContent(){
 QStringList PathSel::getVideoList(){
     QDir dir(path);
     // 设定要匹配的视频扩展名
-    QStringList filters;
-    filters << "*.mp4" << "*.avi" << "*.mkv" << "*.mov"
+    QStringList videofilters,audiofilters;
+    videofilters << "*.mp4" << "*.avi" << "*.mkv" << "*.mov"
             << "*.flv" << "*.wmv" << "*.mpeg" << "*.mpg";
+    audiofilters << "*.mp3"<< "*.aac"<<"*.wav"<< "*.flac"<< "*.ogg"<< "*.opus"<< "*.m4a";
     // 获取文件
-    QStringList videoFiles = dir.entryList(filters, QDir::Files | QDir::NoSymLinks);
+    QStringList videoFiles = dir.entryList(videofilters, QDir::Files | QDir::NoSymLinks);
+    QStringList audioFiles = dir.entryList(audiofilters, QDir::Files | QDir::NoSymLinks);
     // 按名称排序
     videoFiles.sort(Qt::CaseInsensitive);  // 不区分大小写排序（推荐）
+    audioFiles.sort(Qt::CaseInsensitive);
     // 带路径返回（可选）
     for (int i = 0; i < videoFiles.size(); ++i) {
         videoFiles[i] = dir.absoluteFilePath(videoFiles[i]);
         qDebug() << videoFiles[i];
     }
-    return videoFiles;
+    for(int i = 0; i < audioFiles.size(); ++i) {
+        audioFiles[i] = dir.absoluteFilePath(audioFiles[i]);
+        qDebug() << audioFiles[i];
+    }
+    // 合并在一起
+    QStringList result;
+    result << audioFiles << videoFiles;
+    return result;
 }
-
+/**
+ * @brief 按类别输出相关信息
+ */
 void PathSel::updateInfoLabel()
 {
-    const VideoFile* __file = manager->findByPos(manager->selected);
-    if (!__file) return;
+    const VideoFile* file = manager->findByPos(manager->selected);
+    if (!file) return;
 
-    QString info = R"(
+    // 公共样式
+    const QString style = QStringLiteral(R"(
         <style>
         table {
             border-collapse: separate;
-            border-spacing: 10px 6px; /* 横向列距10px，纵向行距6px */
+            border-spacing: 10px 6px;
             font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
             font-size: 13px;
             color: #222;
@@ -290,35 +331,82 @@ void PathSel::updateInfoLabel()
             white-space: nowrap;
         }
         td:last-child {
-            color: #0078D7; /* Windows 蓝色风格 */
+            color: #0078D7;
         }
         </style>
+    )");
 
-        <table>
-        <tr><td>文件名</td><td>%1</td></tr>
-        <tr><td>大小 (MB)</td><td>%2</td></tr>
-        <tr><td>时长 (秒)</td><td>%3</td></tr>
-        <tr><td>分辨率</td><td>%4 × %5</td></tr>
-        <tr><td>帧率</td><td>%6</td></tr>
-        <tr><td>视频编码</td><td>%7</td></tr>
-        <tr><td>视频码率</td><td>%8 kbps</td></tr>
-        <tr><td>声道数</td><td>%9</td></tr>
-        <tr><td>容器格式</td><td>%10</td></tr>
-        </table>
-    )";
+    // 辅助 lambda：如果字符串为空则显示 fallback（默认 "未知"）
+    auto showOr = [](const QString &val, const QString &fallback = QStringLiteral("未知")) {
+        return val.isEmpty() ? fallback : val;
+    };
+    // 数字显示（int/long）
+    auto showNumOr = [](qint64 num, const QString &fallback = QStringLiteral("未知")) {
+        return (num > 0) ? QString::number(num) : fallback;
+    };
 
-    infoLabel->setText(info.arg(
-            __file->fileName(),
-            QString::number(__file->sizeMB(), 'f', 2),
-            __file->durationStr(),
-            QString::number(__file->getWidth()),
-            QString::number(__file->getHeight()),
-            __file->getFps(),
-            __file->getFormat(),
-            QString::number(__file->getBitrate() / 1000),
-            QString::number(__file->getChannels()),
-            __file->getCode()
-        ));
+    // 公共字段
+    QString fileName = file->fileName();
+    QString sizeMb = QString::number(file->sizeMB(), 'f', 2);
+    QString duration = file->durationStr();
+    QString container = showOr(file->getContainer());
+    QString bitrateKb = (file->getBitrate() > 0) ? QString::number(file->getBitrate() / 1000) : QStringLiteral("未知");
+    QString channels = (file->getChannels() > 0) ? QString::number(file->getChannels()) : QStringLiteral("未知");
+    QString sampleRate = (file->getSampleRate() > 0) ? QString::number(file->getSampleRate()) : QStringLiteral("未知");
 
+    // 构造表格行
+    QString rows;
+    auto addRow = [&](const QString &k, const QString &v) {
+        rows += QStringLiteral("<tr><td>%1</td><td>%2</td></tr>\n").arg(k, v);
+    };
+
+    // 始终显示的项
+    addRow(QStringLiteral("文件名"), fileName);
+    addRow(QStringLiteral("大小 (MB)"), sizeMb);
+    addRow(QStringLiteral("时长"), duration);
+
+    // 按类型显示特定项
+    if (file->mediaType == VideoFile::Media_Video) {
+        QString width = (file->getWidth() > 0) ? QString::number(file->getWidth()) : QStringLiteral("-");
+        QString height = (file->getHeight() > 0) ? QString::number(file->getHeight()) : QStringLiteral("-");
+        QString fps = showOr(file->getFps(), QStringLiteral("未知"));
+        QString vcodec = showOr(file->getVideoCodec(), QStringLiteral("未知"));
+
+        addRow(QStringLiteral("分辨率"), QString("%1 × %2").arg(width, height));
+        addRow(QStringLiteral("帧率"), fps);
+        addRow(QStringLiteral("视频编码"), vcodec);
+        addRow(QStringLiteral("视频码率 (kbps)"), bitrateKb);
+        addRow(QStringLiteral("声道数"), channels);
+        addRow(QStringLiteral("采样率 (Hz)"), sampleRate);
+        addRow(QStringLiteral("容器格式"), container);
+    }
+    else if (file->mediaType == VideoFile::Media_Audio) {
+        QString acodec = showOr(file->getVideoCodec(), QStringLiteral("未知")); // 在你的实现里 audio codec 可能也在 getVideoCodec()
+        addRow(QStringLiteral("音频编码"), acodec);
+        addRow(QStringLiteral("采样率 (Hz)"), sampleRate);
+        addRow(QStringLiteral("声道数"), channels);
+        addRow(QStringLiteral("音频码率 (kbps)"), bitrateKb);
+        addRow(QStringLiteral("容器格式"), container);
+    }
+    else {
+        // 未知类型：尽量显示可用字段
+        QString width = (file->getWidth() > 0) ? QString::number(file->getWidth()) : QStringLiteral("-");
+        QString height = (file->getHeight() > 0) ? QString::number(file->getHeight()) : QStringLiteral("-");
+        QString fps = showOr(file->getFps(), QStringLiteral("未知"));
+        QString codec = showOr(file->getVideoCodec(), QStringLiteral("未知"));
+
+        addRow(QStringLiteral("分辨率"), QString("%1 × %2").arg(width, height));
+        addRow(QStringLiteral("帧率"), fps);
+        addRow(QStringLiteral("Codec"), codec);
+        addRow(QStringLiteral("码率 (kbps)"), bitrateKb);
+        addRow(QStringLiteral("声道数"), channels);
+        addRow(QStringLiteral("采样率 (Hz)"), sampleRate);
+        addRow(QStringLiteral("容器格式"), container);
+    }
+
+    const QString html = style + QStringLiteral("<table>\n") + rows + QStringLiteral("</table>\n");
+    infoLabel->setText(html);
     infoLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 }
+
+
